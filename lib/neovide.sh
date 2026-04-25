@@ -24,7 +24,7 @@ install_neovide_cargo() {
 }
 
 install_neovide_appimage() {
-  local url="https://github.com/neovide/neovide/releases/latest/download/neovide-linux-x86_64.AppImage"
+  local url="https://github.com/neovide/neovide/releases/latest/download/neovide.AppImage"
   local dest="$HOME/.local/bin/neovide"
   mkdir -p "$(dirname "$dest")"
   local retry

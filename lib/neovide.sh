@@ -3,7 +3,18 @@ install_neovide() {
   if command -v neovide >/dev/null 2>&1; then
     log_ok "Neovide 已存在"; return 0
   fi
-  log_info "尝试下载 Neovide AppImage ..."
+  # Neovide 需要 glibc >= 2.32，低版本系统无法运行
+  local glibc_ver
+  glibc_ver=$(ldd --version 2>&1 | head -1 | grep -oE '[0-9]+\.[0-9]+$' || echo "0.0")
+  local glibc_minor
+  glibc_minor=$(echo "$glibc_ver" | cut -d. -f2)
+  if [ "${glibc_minor:-0}" -lt 32 ]; then
+    log_warn "Neovide 需要 glibc >= 2.32，当前系统 glibc $glibc_ver，跳过 GUI 安装"
+    log_info "终端 nvim 功能完全一致，仅少了光标动画/平滑滚动等 GUI 特效"
+    log_info "如需 GUI，可升级到 Ubuntu 22.04+ 后重跑 install.sh --gui"
+    return 0
+  fi
+  log_info "尝试下载 Neovide ..."
   install_neovide_appimage || install_neovide_cargo
 }
 

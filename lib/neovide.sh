@@ -3,12 +3,24 @@ install_neovide() {
   if command -v neovide >/dev/null 2>&1; then
     log_ok "Neovide 已存在"; return 0
   fi
-  log_info "尝试通过 cargo 安装 Neovide ..."
-  if command -v cargo >/dev/null 2>&1; then
-    cargo install neovide || install_neovide_appimage
-  else
-    install_neovide_appimage
+  log_info "尝试下载 Neovide AppImage ..."
+  install_neovide_appimage || install_neovide_cargo
+}
+
+install_neovide_cargo() {
+  if ! command -v cargo >/dev/null 2>&1; then
+    log_err "cargo 不可用，无法从源码编译 Neovide"; return 1
   fi
+  local cargo_ver
+  cargo_ver=$(cargo --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+' | head -1)
+  local major minor
+  major=${cargo_ver%%.*}; minor=${cargo_ver#*.}
+  if [ "${major:-0}" -lt 1 ] || { [ "${major:-0}" -eq 1 ] && [ "${minor:-0}" -lt 85 ]; }; then
+    log_err "Cargo $cargo_ver 版本过低 (需要 >= 1.85)，请升级 Rust 工具链或手动安装 Neovide"
+    return 1
+  fi
+  log_info "尝试通过 cargo 编译 Neovide ..."
+  cargo install neovide
 }
 
 install_neovide_appimage() {

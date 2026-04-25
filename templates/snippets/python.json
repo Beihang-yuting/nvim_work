@@ -1,0 +1,30 @@
+{
+  "class": {
+    "prefix": "pyclass",
+    "body": [
+      "class ${1:Name}:",
+      "    def __init__(self, ${2:args}) -> None:",
+      "        ${3:pass}"
+    ]
+  },
+  "main": {
+    "prefix": "__main__",
+    "body": [
+      "if __name__ == \"__main__\":",
+      "    ${1:main()}"
+    ]
+  },
+  "pytest fixture": {
+    "prefix": "pytest",
+    "body": [
+      "import pytest",
+      "",
+      "@pytest.fixture",
+      "def ${1:name}():",
+      "    return ${2:value}",
+      "",
+      "def test_${3:behavior}(${1:name}):",
+      "    assert ${4:condition}"
+    ]
+  }
+}

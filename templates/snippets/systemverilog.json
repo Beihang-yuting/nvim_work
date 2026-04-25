@@ -1,0 +1,128 @@
+{
+  "uvm component": {
+    "prefix": "uvc",
+    "body": [
+      "class ${1:my_comp} extends uvm_component;",
+      "  `uvm_component_utils(${1:my_comp})",
+      "",
+      "  function new(string name = \"${1:my_comp}\", uvm_component parent = null);",
+      "    super.new(name, parent);",
+      "  endfunction",
+      "",
+      "  virtual function void build_phase(uvm_phase phase);",
+      "    super.build_phase(phase);",
+      "    ${2:// build}",
+      "  endfunction",
+      "",
+      "  virtual task run_phase(uvm_phase phase);",
+      "    ${3:// run}",
+      "  endtask",
+      "endclass"
+    ]
+  },
+  "uvm object": {
+    "prefix": "uvo",
+    "body": [
+      "class ${1:my_obj} extends uvm_object;",
+      "  `uvm_object_utils(${1:my_obj})",
+      "",
+      "  function new(string name = \"${1:my_obj}\");",
+      "    super.new(name);",
+      "  endfunction",
+      "endclass"
+    ]
+  },
+  "uvm test": {
+    "prefix": "uvm_test",
+    "body": [
+      "class ${1:my_test} extends uvm_test;",
+      "  `uvm_component_utils(${1:my_test})",
+      "  ${2:my_env} env;",
+      "",
+      "  function new(string name = \"${1:my_test}\", uvm_component parent = null);",
+      "    super.new(name, parent);",
+      "  endfunction",
+      "",
+      "  virtual function void build_phase(uvm_phase phase);",
+      "    super.build_phase(phase);",
+      "    env = ${2:my_env}::type_id::create(\"env\", this);",
+      "  endfunction",
+      "",
+      "  virtual task run_phase(uvm_phase phase);",
+      "    phase.raise_objection(this);",
+      "    ${3:// stimulus}",
+      "    phase.drop_objection(this);",
+      "  endtask",
+      "endclass"
+    ]
+  },
+  "uvm sequence": {
+    "prefix": "uvm_seq",
+    "body": [
+      "class ${1:my_seq} extends uvm_sequence#(${2:my_item});",
+      "  `uvm_object_utils(${1:my_seq})",
+      "",
+      "  function new(string name = \"${1:my_seq}\");",
+      "    super.new(name);",
+      "  endfunction",
+      "",
+      "  virtual task body();",
+      "    ${2:my_item} req;",
+      "    repeat (${3:10}) begin",
+      "      req = ${2:my_item}::type_id::create(\"req\");",
+      "      start_item(req);",
+      "      assert(req.randomize());",
+      "      finish_item(req);",
+      "    end",
+      "  endtask",
+      "endclass"
+    ]
+  },
+  "run_phase": {
+    "prefix": "runp",
+    "body": [
+      "virtual task run_phase(uvm_phase phase);",
+      "  phase.raise_objection(this);",
+      "  ${1:// run}",
+      "  phase.drop_objection(this);",
+      "endtask"
+    ]
+  },
+  "build_phase": {
+    "prefix": "bldp",
+    "body": [
+      "virtual function void build_phase(uvm_phase phase);",
+      "  super.build_phase(phase);",
+      "  ${1:// build}",
+      "endfunction"
+    ]
+  },
+  "uvm_info": {
+    "prefix": "uvi",
+    "body": ["`uvm_info(get_type_name(), $sformatf(\"${1:msg}\"), UVM_${2:MEDIUM})"]
+  },
+  "uvm_warning": {
+    "prefix": "uvw",
+    "body": ["`uvm_warning(get_type_name(), \"${1:msg}\")"]
+  },
+  "uvm_error": {
+    "prefix": "uve",
+    "body": ["`uvm_error(get_type_name(), \"${1:msg}\")"]
+  },
+  "uvm_fatal": {
+    "prefix": "uvf",
+    "body": ["`uvm_fatal(get_type_name(), \"${1:msg}\")"]
+  },
+  "config_db get": {
+    "prefix": "cdb",
+    "body": ["uvm_config_db#(${1:type})::get(this, \"\", \"${2:name}\", ${3:var});"]
+  },
+  "config_db set": {
+    "prefix": "cdbs",
+    "body": ["uvm_config_db#(${1:type})::set(this, \"${2:path}\", \"${3:name}\", ${4:val});"]
+  },
+  "type_id create": {
+    "prefix": "tic",
+    "body": ["${1:type}::type_id::create(\"${2:name}\", this)"]
+  }
+}

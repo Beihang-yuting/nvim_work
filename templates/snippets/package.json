@@ -1,0 +1,12 @@
+{
+  "name": "gvim-work-snippets",
+  "contributes": {
+    "snippets": [
+      { "language": "systemverilog", "path": "./systemverilog.json" },
+      { "language": "verilog",       "path": "./verilog.json" },
+      { "language": "tcl",           "path": "./tcl.json" },
+      { "language": "python",        "path": "./python.json" },
+      { "language": "cpp",           "path": "./cpp.json" }
+    ]
+  }
+}

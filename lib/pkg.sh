@@ -26,10 +26,15 @@ pkg_install_core() {
   case "$distro" in
     ubuntu|debian)
       pkg_install git curl unzip build-essential ripgrep fd-find nodejs npm python3 python3-pip cargo make
-      sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd 2>/dev/null || true
+      local fdfind_path
+      fdfind_path="$(command -v fdfind 2>/dev/null || true)"
+      if [ -n "$fdfind_path" ] && ! command -v fd >/dev/null 2>&1; then
+        sudo ln -sf "$fdfind_path" /usr/local/bin/fd 2>/dev/null || true
+      fi
       ;;
     rhel|fedora)
-      pkg_install git curl unzip @development-tools ripgrep fd-find nodejs npm python3 python3-pip cargo make
+      sudo dnf groupinstall -y "Development Tools" || log_warn "Development Tools group install failed"
+      pkg_install git curl unzip ripgrep fd-find nodejs npm python3 python3-pip cargo make
       ;;
     arch)
       pkg_install git curl unzip base-devel ripgrep fd nodejs npm python python-pip rust make

@@ -16,7 +16,11 @@ while [ $# -gt 0 ]; do
     --gui)            WANT_GUI=1 ;;
     --no-mason)       NO_MASON=1 ;;
     --minimal)        MINIMAL=1 ;;
-    --restore)        RESTORE_DATE="$2"; shift ;;
+    --restore)
+      if [ $# -lt 2 ] || [ -z "${2:-}" ] || [ "${2#-}" != "$2" ]; then
+        log_err "--restore 需要 YYYYMMDD 参数"; exit 1
+      fi
+      RESTORE_DATE="$2"; shift ;;
     -h|--help)
       cat <<EOF
 用法: install.sh [选项]

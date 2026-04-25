@@ -24,19 +24,42 @@ install_neovide_cargo() {
 }
 
 install_neovide_appimage() {
-  local url="https://github.com/neovide/neovide/releases/latest/download/neovide.AppImage"
   local dest="$HOME/.local/bin/neovide"
   mkdir -p "$(dirname "$dest")"
+
+  # 优先尝试 tar.gz (静态链接，兼容性更好)
+  local tar_url="https://github.com/neovide/neovide/releases/latest/download/neovide-linux-x86_64.tar"
+  local tmpfile
+  tmpfile="$(mktemp /tmp/neovide-XXXXXX.tar)"
+  if curl -fL --retry 3 --connect-timeout 30 "$tar_url" -o "$tmpfile" 2>/dev/null; then
+    if tar -xf "$tmpfile" -C "$(dirname "$dest")" neovide 2>/dev/null; then
+      chmod +x "$dest"
+      rm -f "$tmpfile"
+      log_ok "Neovide (tar) 已安装到 $dest"
+      return 0
+    fi
+  fi
+  rm -f "$tmpfile"
+
+  # tar 失败则尝试 AppImage
+  local appimage_url="https://github.com/neovide/neovide/releases/latest/download/neovide.AppImage"
   local retry
   for retry in 1 2 3; do
-    if curl -fL --retry 3 --retry-delay 5 --connect-timeout 30 "$url" -o "$dest"; then
+    if curl -fL --retry 3 --retry-delay 5 --connect-timeout 30 "$appimage_url" -o "$dest"; then
       chmod +x "$dest"
-      log_ok "Neovide AppImage 已安装到 $dest"
-      return 0
+      # 验证 glibc 兼容性
+      if "$dest" --version >/dev/null 2>&1; then
+        log_ok "Neovide AppImage 已安装到 $dest"
+        return 0
+      else
+        log_warn "Neovide AppImage 与当前系统不兼容 (可能 glibc 版本过低)"
+        rm -f "$dest"
+        return 1
+      fi
     fi
     log_warn "下载失败，第 $retry 次重试 ..."
     sleep 5
   done
-  log_err "Neovide AppImage 下载失败，请检查网络或手动下载"
+  log_err "Neovide 下载失败，请检查网络或手动安装"
   return 1
 }

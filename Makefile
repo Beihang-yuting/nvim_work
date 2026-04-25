@@ -1,4 +1,4 @@
-.PHONY: help install install-gui sync check test smoke clean restore
+.PHONY: help install install-gui sync check test smoke clean restore uninstall
 
 help:
 	@echo "Targets:"
@@ -8,6 +8,7 @@ help:
 	@echo "  check         —— 跑 healthcheck.sh"
 	@echo "  test          —— 跑 test/smoke.sh"
 	@echo "  restore D=YYYYMMDD —— 回滚到指定日期备份"
+	@echo "  uninstall     —— 一键卸载 nvim/neovide 及所有配置数据"
 
 install:
 	bash install.sh
@@ -32,3 +33,6 @@ test smoke:
 restore:
 	@test -n "$(D)" || { echo "用法: make restore D=YYYYMMDD"; exit 1; }
 	bash install.sh --restore $(D)
+
+uninstall:
+	bash install.sh --uninstall

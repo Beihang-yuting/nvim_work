@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$SCRIPT_DIR/lib/neovide.sh"
 . "$SCRIPT_DIR/lib/backup.sh"
 
-DRY_RUN=0; WANT_GUI=0; NO_MASON=0; MINIMAL=0; RESTORE_DATE=""
+DRY_RUN=0; WANT_GUI=0; NO_MASON=0; MINIMAL=0; RESTORE_DATE=""; UNINSTALL=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -16,6 +16,7 @@ while [ $# -gt 0 ]; do
     --gui)            WANT_GUI=1 ;;
     --no-mason)       NO_MASON=1 ;;
     --minimal)        MINIMAL=1 ;;
+    --uninstall)      UNINSTALL=1 ;;
     --restore)
       if [ $# -lt 2 ] || [ -z "${2:-}" ] || [ "${2#-}" != "$2" ]; then
         log_err "--restore 需要 YYYYMMDD 参数"; exit 1
@@ -29,12 +30,18 @@ while [ $# -gt 0 ]; do
   --minimal           只装核心
   --dry-run           仅打印步骤
   --restore YYYYMMDD  回滚到指定日期备份
+  --uninstall         一键卸载 nvim/neovide 及所有配置和数据
 EOF
       exit 0 ;;
     *) log_err "未知参数: $1"; exit 1 ;;
   esac
   shift
 done
+
+if [ "$UNINSTALL" = "1" ]; then
+  uninstall_all
+  exit 0
+fi
 
 if [ -n "$RESTORE_DATE" ]; then
   restore_nvim_config "$RESTORE_DATE"

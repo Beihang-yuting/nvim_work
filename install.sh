@@ -46,10 +46,18 @@ DISTRO=$(detect_distro); log_info "distro=$DISTRO"
 NVIM_VER=$(detect_nvim_version); log_info "nvim=$NVIM_VER"
 
 log_step "install system packages"
-[ "$DRY_RUN" = "1" ] && echo "DRY: pkg_install_core" || pkg_install_core
+if [ "$DRY_RUN" = "1" ] || [ "${GVIM_SKIP_SYSTEM_PKG:-0}" = "1" ]; then
+  echo "DRY: pkg_install_core"
+else
+  pkg_install_core
+fi
 
 log_step "install Nerd Font"
-[ "$DRY_RUN" = "1" ] && echo "DRY: install_nerd_font" || install_nerd_font
+if [ "$DRY_RUN" = "1" ] || [ "${GVIM_SKIP_NERD_FONT:-0}" = "1" ]; then
+  echo "DRY: install_nerd_font"
+else
+  install_nerd_font
+fi
 
 if [ "$WANT_GUI" = "1" ]; then
   log_step "install Neovide GUI"
@@ -60,10 +68,39 @@ log_step "backup existing config"
 [ "$DRY_RUN" = "1" ] && echo "DRY: backup_nvim_config" || backup_nvim_config
 
 log_step "clone LazyVim starter"
-[ "$DRY_RUN" = "1" ] && echo "DRY: git clone LazyVim/starter ~/.config/nvim" || true
+TARGET="$HOME/.config/nvim"
+if [ "$DRY_RUN" = "1" ]; then
+  echo "DRY: git clone LazyVim/starter $TARGET"
+else
+  if [ ! -f "$TARGET/init.lua" ]; then
+    mkdir -p "$(dirname "$TARGET")"
+    git clone --depth=1 https://github.com/LazyVim/starter "$TARGET"
+    rm -rf "$TARGET/.git"
+    log_ok "LazyVim starter 已克隆"
+  else
+    log_info "已存在 $TARGET/init.lua，跳过 clone"
+  fi
+fi
+
+log_step "overlay templates/"
+if [ "$DRY_RUN" = "1" ]; then
+  echo "DRY: rsync templates/ -> $TARGET/"
+else
+  rsync -a "$SCRIPT_DIR/templates/lua/"      "$TARGET/lua/"      2>/dev/null || true
+  rsync -a "$SCRIPT_DIR/templates/snippets/" "$TARGET/snippets/" 2>/dev/null || true
+  rsync -a "$SCRIPT_DIR/templates/after/"    "$TARGET/after/"    2>/dev/null || true
+  cp "$SCRIPT_DIR/templates/CHEATSHEET.md"   "$TARGET/CHEATSHEET.md" 2>/dev/null || true
+  log_ok "templates/ 已覆盖到 $TARGET/"
+fi
 
 log_step "headless Lazy! sync"
-[ "$DRY_RUN" = "1" ] && echo "DRY: nvim --headless +Lazy! sync +qa" || true
+if [ "$DRY_RUN" = "1" ]; then
+  echo "DRY: nvim --headless +Lazy! sync +qa"
+elif [ "$MINIMAL" = "1" ]; then
+  log_info "minimal 模式：跳过 Lazy sync（首次启动 nvim 时自动同步）"
+else
+  nvim --headless "+Lazy! sync" +qa 2>&1 | tail -5 || log_warn "Lazy sync 出错，可手动重跑"
+fi
 
 if [ "$NO_MASON" = "0" ]; then
   log_step "headless Mason install"

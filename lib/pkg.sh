@@ -49,10 +49,14 @@ install_nvim_if_needed() {
   local major minor
   major=$(echo "$cur_ver" | cut -d. -f1)
   minor=$(echo "$cur_ver" | cut -d. -f2)
-  if [ "${major:-0}" -ge 1 ] || { [ "${major:-0}" -eq 0 ] && [ "${minor:-0}" -ge 10 ]; }; then
-    log_ok "Neovim $cur_ver 已满足 >= 0.10"; return 0
+  local patch
+  patch=$(echo "$cur_ver" | cut -d. -f3)
+  # LazyVim 要求 >= 0.11.2
+  if [ "${major:-0}" -ge 1 ] || { [ "${major:-0}" -eq 0 ] && [ "${minor:-0}" -gt 11 ]; } \
+     || { [ "${major:-0}" -eq 0 ] && [ "${minor:-0}" -eq 11 ] && [ "${patch:-0}" -ge 2 ]; }; then
+    log_ok "Neovim $cur_ver 已满足 >= 0.11.2"; return 0
   fi
-  log_info "系统 Neovim ($cur_ver) 版本过低，从 GitHub 安装 ..."
+  log_info "系统 Neovim ($cur_ver) 版本过低 (需要 >= 0.11.2)，从 GitHub 安装 ..."
 
   local arch
   arch="$(uname -m)"
@@ -102,10 +106,10 @@ install_nvim_appimage() {
   if [ "$arch" != "x86_64" ]; then
     log_err "AppImage 仅支持 x86_64，当前架构: $arch"; return 1
   fi
-  # v0.10.4 AppImage 自带运行库，兼容 glibc 2.17+
-  local url="https://github.com/neovim/neovim/releases/download/v0.10.4/nvim-linux-x86_64.appimage"
+  # v0.11.7 AppImage 自带运行库，兼容旧 glibc，满足 LazyVim >= 0.11.2 要求
+  local url="https://github.com/neovim/neovim/releases/download/v0.11.7/nvim-linux-x86_64.appimage"
   local dest="$dest_dir/nvim"
-  log_info "glibc 版本较低，使用 Neovim v0.10.4 AppImage (自带运行库) ..."
+  log_info "glibc 版本较低，使用 Neovim v0.11.7 AppImage (自带运行库) ..."
   if curl -fL --retry 3 --connect-timeout 30 "$url" -o "$dest"; then
     chmod +x "$dest"
     if "$dest" --version >/dev/null 2>&1; then

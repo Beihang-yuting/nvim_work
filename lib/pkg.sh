@@ -103,24 +103,45 @@ install_nvim_tarball() {
 
 install_nvim_appimage() {
   local arch="$1" dest_dir="$2"
+
+  # snap 完全自包含，不依赖系统 glibc，优先使用
+  if command -v snap >/dev/null 2>&1; then
+    log_info "glibc 版本较低，使用 snap 安装 Neovim (完全自包含) ..."
+    if sudo snap install nvim --classic; then
+      local snap_nvim="/snap/bin/nvim"
+      if [ -x "$snap_nvim" ] && "$snap_nvim" --version >/dev/null 2>&1; then
+        log_ok "Neovim (snap) 已安装: $("$snap_nvim" --version | head -1)"
+        if ! echo "$PATH" | grep -q "/snap/bin"; then
+          export PATH="/snap/bin:$PATH"
+          log_info "已临时添加 /snap/bin 到 PATH"
+          log_info "建议在 ~/.bashrc 中添加: export PATH=\"/snap/bin:\$PATH\""
+        fi
+        return 0
+      fi
+    fi
+    log_warn "snap 安装失败，尝试 AppImage ..."
+  fi
+
+  # snap 不可用时尝试 AppImage
   if [ "$arch" != "x86_64" ]; then
     log_err "AppImage 仅支持 x86_64，当前架构: $arch"; return 1
   fi
-  # v0.11.7 AppImage 自带运行库，兼容旧 glibc，满足 LazyVim >= 0.11.2 要求
   local url="https://github.com/neovim/neovim/releases/download/v0.11.7/nvim-linux-x86_64.appimage"
   local dest="$dest_dir/nvim"
-  log_info "glibc 版本较低，使用 Neovim v0.11.7 AppImage (自带运行库) ..."
+  log_info "尝试 Neovim v0.11.7 AppImage ..."
   if curl -fL --retry 3 --connect-timeout 30 "$url" -o "$dest"; then
     chmod +x "$dest"
     if "$dest" --version >/dev/null 2>&1; then
       nvim_ensure_path "$dest_dir"
+      return 0
     else
-      log_err "AppImage 下载成功但无法运行，可能需要安装 FUSE: sudo apt install libfuse2"
-      return 1
+      rm -f "$dest"
+      log_warn "AppImage 与当前系统不兼容"
     fi
-  else
-    log_err "Neovim AppImage 下载失败"; return 1
   fi
+
+  log_err "Neovim 安装失败。请手动安装 >= 0.11.2: sudo snap install nvim --classic"
+  return 1
 }
 
 nvim_ensure_path() {
